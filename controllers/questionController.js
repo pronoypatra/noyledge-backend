@@ -1,7 +1,8 @@
 import Quiz from '../models/Quiz.js';
 import Result from '../models/Result.js';
+import Question from '../models/Question.js'; // You need to import Question too
 
-exports.addQuestion = async (req, res) => {
+export const addQuestion = async (req, res) => {
   try {
     const quizId = req.params.id;
     const { questionText, options, correctOption } = req.body;
@@ -19,7 +20,7 @@ exports.addQuestion = async (req, res) => {
   }
 };
 
-exports.getQuestionsByQuiz = async (req, res) => {
+export const getQuestionsByQuiz = async (req, res) => {
   const { quizId } = req.params;
 
   try {

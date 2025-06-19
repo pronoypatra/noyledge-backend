@@ -1,8 +1,7 @@
 import Result from "../models/Result.js";
 import Question from "../models/Question.js";
 
-
-exports.submitQuiz = async (req, res) => {
+export const submitQuiz = async (req, res) => {
   const { quizId, answers } = req.body;
   const userId = req.user.userId;
 
