@@ -36,4 +36,4 @@ router.post("/:quizId/questions", protect, allowRoles("admin"), addQuestion);
 router.get("/:quizId/questions", protect, getQuestionsByQuiz);
 
 
-module.exports = router;
+export default router;

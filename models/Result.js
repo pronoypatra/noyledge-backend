@@ -19,7 +19,8 @@ const resultSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Result', resultSchema);
+const Result = mongoose.model('Result', resultSchema);
+export default Result;
 
 // import mongoose from 'mongoose';
 
@@ -48,4 +49,5 @@ module.exports = mongoose.model('Result', resultSchema);
 //   },
 // });
 
-// module.exports = mongoose.model("Result", resultSchema);
+// const Result = mongoose.model('Result', resultSchema);
+// export default Result;
