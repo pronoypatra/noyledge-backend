@@ -1,0 +1,44 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+encd/
+venv/
+ENV/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+target/
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment variables
+.env
+
+# Build output
+dist/
+build/
+out/
+
+# Misc
+*.swp
