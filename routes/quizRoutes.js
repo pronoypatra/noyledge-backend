@@ -1,22 +1,23 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const {
+
+import {
   createQuiz,
   getAllQuizzes,
   getQuizResults,
-} = require("../controllers/quizController");
+} from "../controllers/quizController.js";
 
-const {
+import {
   addQuestion,
   getQuestionsByQuiz,
-} = require("../controllers/questionController");
+} from "../controllers/questionController.js";
 
-const protect = require("../middleware/authMiddleware");
-const allowRoles = require("../middleware/roleMiddleware");
+import protect from "../middleware/authMiddleware.js";
+import allowRoles from "../middleware/roleMiddleware.js";
 
-const { submitQuiz } = require("../controllers/resultController");
+import { submitQuiz } from "../controllers/resultController.js";
 
-const quizController = require('../controllers/quizController');
+import * as quizController from '../controllers/quizController.js';
 
 // Quiz routes
 router.post("/", protect, allowRoles("admin"), createQuiz);

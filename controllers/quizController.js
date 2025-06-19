@@ -1,6 +1,6 @@
-const Quiz = require("../models/Quiz");
-const Question = require("../models/Question");
-const Result = require('../models/Result');
+import Quiz from "../models/Quiz.js";
+import Question from "../models/Question.js";
+import Result from "../models/Result.js";
 
 exports.createQuiz = async (req, res) => {
   try {

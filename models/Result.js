@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
 
 const resultSchema = new mongoose.Schema({
   quizId: {
@@ -20,7 +21,7 @@ const resultSchema = new mongoose.Schema({
 
 module.exports = mongoose.model('Result', resultSchema);
 
-// const mongoose = require("mongoose");
+// import mongoose from 'mongoose';
 
 // const resultSchema = new mongoose.Schema({
 //   user: {
