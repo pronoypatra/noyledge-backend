@@ -4,7 +4,6 @@ import cors from "cors";
 import connectDB from "./config/db.js"; 
 
 import authRoutes from "./routes/authRoutes.js";
-// import quizRoutes from "./routes/quizRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 
 // Load env vars
@@ -24,9 +23,7 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Placeholder routes (we’ll add proper ones later)
 app.use("/api/auth", authRoutes);
-// app.use('/api', quizRoutes);
 app.use("/api/quizzes", quizRoutes);
 
 const PORT = process.env.PORT || 5000;

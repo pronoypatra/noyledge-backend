@@ -40,20 +40,30 @@ export const getAllQuizzes = async (req, res) => {
 
 export const getQuizResults = async (req, res) => {
   try {
-    const quizId = req.params.id;
-    const results = await Result.find({ quizId }).populate('userId', 'username');
+    const quizId = req.params.quizId;
 
-    res.status(200).json({
-      title: (await Quiz.findById(quizId))?.title || 'Quiz',
-      results: results.map(r => ({
-        username: r.username || r.userId.username,
+    const results = await Result.find({ quizId }).populate('userId', 'name');
+    // console.log("📊 Retrieved results:", results);
+
+    const quiz = await Quiz.findById(quizId);
+
+    const formattedResults = results.map(r => {
+      return {
+        username: r.username || r.userId?.name,
         score: r.score,
         total: r.total,
-        attemptedAt: r.attemptedAt
-      })),
+        attemptedAt: r.attemptedAt,
+      };
     });
+
+    res.status(200).json({
+      title: quiz?.title || 'Quiz',
+      results: formattedResults,
+    });
+
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error in getQuizResults:", err);
     res.status(500).json({ message: 'Error fetching results' });
   }
 };
+

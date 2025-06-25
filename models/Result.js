@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 
-
 const resultSchema = new mongoose.Schema({
   quizId: {
     type: mongoose.Schema.Types.ObjectId,

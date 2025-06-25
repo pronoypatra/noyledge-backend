@@ -1,22 +1,47 @@
 import Quiz from '../models/Quiz.js';
 import Result from '../models/Result.js';
-import Question from '../models/Question.js'; // You need to import Question too
+import Question from '../models/Question.js'; 
 
 export const addQuestion = async (req, res) => {
   try {
-    const quizId = req.params.id;
+    const quizId = req.params.quizId;
     const { questionText, options, correctOption } = req.body;
 
-    const quiz = await Quiz.findById(quizId);
-    if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
+    // Basic validation
+    if (!questionText || !Array.isArray(options) || options.length < 2) {
+      return res.status(400).json({
+        message: 'Question text and at least two options are required.',
+      });
+    }
 
-    quiz.questions.push({ questionText, options, correctOption });
-    await quiz.save();
+    if (typeof correctOption !== 'number' || correctOption < 0 || correctOption >= options.length) {
+      return res.status(400).json({
+        message: 'Valid correctOption index is required.',
+      });
+    }
 
-    res.status(200).json({ message: 'Question added successfully', quiz });
+    // Prepare options with isCorrect
+    const formattedOptions = options.map((text, index) => ({
+      optionText: text,
+      isCorrect: index === correctOption,
+    }));
+
+    // Create and save the question
+    const newQuestion = new Question({
+      quiz: quizId,
+      questionText,
+      options: formattedOptions,
+    });
+
+    await newQuestion.save();
+
+    res.status(201).json({
+      message: 'Question added successfully',
+      question: newQuestion,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error adding question' });
+    console.error('❌ Error adding question:', err);
+    res.status(500).json({ message: 'Server error adding question' });
   }
 };
 
@@ -24,9 +49,16 @@ export const getQuestionsByQuiz = async (req, res) => {
   const { quizId } = req.params;
 
   try {
-    const questions = await Question.find({ quiz: quizId });
+    const questions = await Question.find({ quiz: quizId});
+    
+    if (!questions || questions.length === 0) {
+      console.warn("⚠️ No questions found for quizId:", quizId);
+    } else {
+    }
+
     res.json(questions);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("❌ Error occurred in getQuestionsByQuiz:", err.message);
+    res.status(500).json({ message: "Server error fetching questions" });
   }
 };
