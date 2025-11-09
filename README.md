@@ -50,6 +50,13 @@ A comprehensive REST API backend for a quiz application built with Node.js, Expr
   - Average score across all quizzes
   - Quiz completion history
   - Badge collection
+- **Follow/Following System**:
+  - Users can follow and unfollow other users
+  - Mutual follow tracking (both users must follow each other)
+  - Followers and following lists with user details
+  - Remove followers functionality
+  - User discovery endpoint with search and sorting
+  - Mutual followers calculation
 - **Badge System**: 
   - Automatic badge awarding based on achievements
   - Multiple badge types (First Quiz, Perfect Score, Quiz Master, etc.)
@@ -91,13 +98,25 @@ A comprehensive REST API backend for a quiz application built with Node.js, Expr
 - Participant growth over time
 - Attempts tracking
 - Average score trends
-- Reported vs fixed questions visualization
+- **Completion Time Analytics**:
+  - Histogram showing completion time distribution
+  - Average, median, min, and max completion times
+  - Time-based performance metrics
+  - Completion time tracking per quiz attempt
 
 ### Reporting & Moderation
-- Report questions for inappropriate content
-- Admin moderation panel
-- Fix, ignore, or delete reported questions
-- Auto-expiry for unhandled reports (10 days)
+- **Question Reporting System**:
+  - Users can report questions during quiz attempts
+  - Report reasons and tracking
+  - One report per question per user (prevents spam)
+  - Report count increment on questions
+- **Admin Moderation**:
+  - Admin moderation panel (only shows reports for own quizzes)
+  - Filter reports by status (pending, fixed, ignored, deleted)
+  - Fix reported questions (edit question text and options)
+  - Ignore or delete reported questions
+  - Auto-expiry for unhandled reports (10 days)
+  - Quiz ownership verification for report management
 
 ### Categories & Tags
 - Predefined categories (Science, Math, History, etc.)
@@ -106,9 +125,17 @@ A comprehensive REST API backend for a quiz application built with Node.js, Expr
 - Tag-based quiz filtering
 
 ### Chat System
-- Real-time messaging using Socket.io
-- Chat between quiz creators and participants
-- Message history
+- **REST-based Chat** (simpler alternative to WebSockets):
+  - Create chats between users with mutual follow requirement
+  - Send and receive messages via REST API
+  - Message history with sender information
+  - Polling support for real-time updates (frontend)
+  - Mutual follow verification before chat creation and message sending
+  - Chat list filtered by mutual follow status
+- **Socket.io Integration** (also available):
+  - Real-time messaging using Socket.io
+  - Chat between quiz creators and participants
+  - Message history
 
 ### Badge System
 - **Automatic Badge Awarding**: Badges are awarded automatically on quiz completion
@@ -336,6 +363,8 @@ BACKEND_URL=http://localhost:5000
 - `POST /api/quizzes/:quizId/subscribe` - Subscribe to quiz (protected)
 - `POST /api/quizzes/:quizId/save` - Save/bookmark quiz (protected)
 - `POST /api/quizzes/:quizId/submit` - Submit quiz attempt (protected)
+  - Body: `{ answers: [{ questionId, selectedOption }], timeTaken, startTime }`
+  - Returns: `{ score, total, percentage, timeTaken, awardedBadges }`
 - `GET /api/quizzes/:quizId/results` - Get quiz results (admin only)
 
 ### Questions (`/api/quizzes/:quizId/questions`)
@@ -355,6 +384,16 @@ BACKEND_URL=http://localhost:5000
 - `GET /api/profile/:userId/quizzes` - Get user's quiz attempts
 - `GET /api/profile/:userId/badges` - Get user badges
 - `POST /api/profile/:userId/follow-category` - Follow/unfollow category
+- `GET /api/profile/discover` - Discover/search users (protected)
+  - Query params: `search`, `sortBy` (followers/name/recent), `limit`
+  - Returns: List of users with follow status and mutual followers
+- `POST /api/profile/:userId/follow` - Follow/unfollow user (protected)
+  - Returns: `{ isFollowing, message }`
+- `GET /api/profile/:userId/followers` - Get user's followers list (protected)
+  - Returns: `{ followers: [], canRemove: boolean }`
+- `GET /api/profile/:userId/following` - Get user's following list (protected)
+  - Returns: `{ following: [], canUnfollow: boolean }`
+- `DELETE /api/profile/:userId/followers/:followerId` - Remove follower (protected)
 
 ### Analytics (`/api/analytics`)
 
@@ -362,7 +401,8 @@ BACKEND_URL=http://localhost:5000
 - `GET /api/analytics/quiz/:quizId/participants` - Participant growth data
 - `GET /api/analytics/quiz/:quizId/attempts` - Attempts over time
 - `GET /api/analytics/quiz/:quizId/scores` - Score trends
-- `GET /api/analytics/quiz/:quizId/reported-vs-fixed` - Report statistics (admin)
+- `GET /api/analytics/quiz/:quizId/completion-time` - Completion time analytics (admin)
+  - Returns: `{ histogram: [], stats: { averageTime, medianTime, minTime, maxTime, totalAttempts } }`
 
 ### Reports (`/api/reports`)
 
@@ -376,9 +416,19 @@ BACKEND_URL=http://localhost:5000
 ### Chat (`/api/chat`)
 
 - `GET /api/chat` - Get user's chats (protected)
+  - Returns only chats where mutual follow exists
+  - Filters out chats where mutual follow is broken
 - `POST /api/chat` - Create/start chat (protected)
+  - Body: `{ participantId }`
+  - Requires mutual follow (both users must follow each other)
+  - Returns: Chat object with participants
 - `GET /api/chat/:chatId/messages` - Get chat messages (protected)
+  - Returns messages sorted by timestamp (oldest first)
+  - Populates sender information
 - `POST /api/chat/:chatId/messages` - Send message (protected)
+  - Body: `{ text }`
+  - Verifies mutual follow before allowing message
+  - Returns: `{ message: 'Message sent successfully', messageData: {...} }`
 
 ### Categories (`/api/categories`)
 
@@ -399,8 +449,9 @@ BACKEND_URL=http://localhost:5000
 - `avatar`, `bio`
 - `badges[]`, `followedCategories[]`
 - `savedQuizzes[]`, `savedQuestions[]`
-- `googleId`, `oauthProvider`
+- `googleId`, `casId`, `oauthProvider` (local/google/cas)
 - `lastQuizDate`, `quizStreak`
+- `followers[]`, `following[]` (User references)
 
 ### Quiz
 - `title`, `description`
@@ -424,6 +475,7 @@ BACKEND_URL=http://localhost:5000
 - `score` (number of correct answers)
 - `total` (total number of questions)
 - `timeTaken` (completion time in seconds)
+- `startTime` (ISO timestamp of quiz start)
 - `attemptedAt` (timestamp of attempt)
 - `createdAt`, `updatedAt` (timestamps)
 
@@ -443,9 +495,10 @@ BACKEND_URL=http://localhost:5000
 - `createdBy`
 
 ### Chat
-- `participants[]` (User references)
+- `participants[]` (User references, exactly 2 users)
 - `messages[]` (embedded with sender, text, timestamp)
 - `lastMessageAt`
+- **Mutual Follow Requirement**: Both participants must follow each other to create/send messages
 
 ### Analytics
 - `quizId`, `date`
@@ -562,10 +615,12 @@ Error responses include a `message` field with error details.
 6. Returns result with score, badges earned, and statistics
 
 ### Time Tracking
-- Time is calculated on the backend from quiz start to submission
-- Stored in seconds in the Result model
+- **Quiz Timer**: Frontend tracks elapsed time during quiz attempt
+- Time is calculated from `startTime` to submission
+- Stored in seconds in the Result model (`timeTaken`)
 - Used for "Speed Demon" badge (under 5 minutes)
 - Displayed in quiz results and analytics
+- **Completion Time Analytics**: Histogram and statistics for completion times
 
 ### Badge Awarding
 Badges are automatically checked and awarded after quiz submission:
