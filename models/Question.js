@@ -16,7 +16,16 @@ const questionSchema = new mongoose.Schema({
       isCorrect: { type: Boolean, default: false },
     },
   ],
-});
+  // Store original text before banned keyword filtering
+  originalText: {
+    type: String,
+  },
+  // Track if question has been reported
+  reportCount: {
+    type: Number,
+    default: 0,
+  },
+}, { timestamps: true });
 
 
 const Question = mongoose.model("Question", questionSchema);

@@ -7,15 +7,45 @@ const questionSchema = new mongoose.Schema({
 });
 
 const quizSchema = new mongoose.Schema({
-  title: String,
-  description: String,
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    default: "",
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Reference to the 'User' model
-    required: true, // Ensure the creator is always present
+    ref: 'User',
+    required: true,
   },
   questions: [questionSchema],
-});
+  tags: [{
+    type: String,
+  }],
+  difficulty: {
+    type: String,
+    enum: ["easy", "medium", "hard"],
+    default: "medium",
+  },
+  imageUrl: {
+    type: String,
+    default: "",
+  },
+  participants: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  subscribers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  isPublished: {
+    type: Boolean,
+    default: true,
+  },
+}, { timestamps: true });
 
 const Quiz = mongoose.model('Quiz', quizSchema);
 export default Quiz;
