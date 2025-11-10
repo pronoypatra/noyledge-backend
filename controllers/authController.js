@@ -69,7 +69,7 @@ export const loginUser = async (req, res) => {
 
 export const googleLogin = async (req, res) => {
   try {
-    const { googleId, email, name, avatar } = req.body;
+    const { googleId, email, name, avatar, role } = req.body;
 
     if (!googleId || !email || !name) {
       return res.status(400).json({ message: "Google ID, email, and name are required" });
@@ -77,6 +77,7 @@ export const googleLogin = async (req, res) => {
 
     // Check if user exists with this email
     let user = await User.findOne({ email });
+    let isNewUser = false;
 
     if (user) {
       // User exists, update Google ID if not set
@@ -87,15 +88,27 @@ export const googleLogin = async (req, res) => {
         await user.save();
       }
     } else {
-      // Create new user
+      // New user - require role selection
+      if (!role) {
+        return res.status(200).json({
+          requiresRoleSelection: true,
+          email,
+          name,
+          avatar: avatar || "",
+          googleId,
+        });
+      }
+
+      // Create new user with selected role
       user = await User.create({
         name,
         email,
         googleId,
         oauthProvider: "google",
         avatar: avatar || "",
-        role: "user",
+        role: role || "user",
       });
+      isNewUser = true;
     }
 
     res.status(200).json({
@@ -105,6 +118,7 @@ export const googleLogin = async (req, res) => {
       role: user.role,
       avatar: user.avatar,
       token: generateToken(user._id, user.role),
+      isNewUser,
     });
   } catch (error) {
     console.error("Error in Google login:", error);
@@ -135,7 +149,7 @@ export const refreshToken = async (req, res) => {
 // CAS Authentication
 export const casLogin = async (req, res) => {
   try {
-    const { casId, email, name, attributes } = req.body;
+    const { casId, email, name, attributes, role } = req.body;
 
     if (!casId || !email || !name) {
       return res.status(400).json({ message: "CAS ID, email, and name are required" });
@@ -143,6 +157,7 @@ export const casLogin = async (req, res) => {
 
     // Check if user exists with this email
     let user = await User.findOne({ email });
+    let isNewUser = false;
 
     if (user) {
       // User exists, update CAS ID if not set
@@ -152,14 +167,26 @@ export const casLogin = async (req, res) => {
         await user.save();
       }
     } else {
-      // Create new user
+      // New user - require role selection
+      if (!role) {
+        return res.status(200).json({
+          requiresRoleSelection: true,
+          email,
+          name,
+          avatar: "",
+          casId,
+        });
+      }
+
+      // Create new user with selected role
       user = await User.create({
         name,
         email,
         casId,
         oauthProvider: "cas",
-        role: "user",
+        role: role || "user",
       });
+      isNewUser = true;
     }
 
     res.status(200).json({
@@ -169,6 +196,7 @@ export const casLogin = async (req, res) => {
       role: user.role,
       avatar: user.avatar,
       token: generateToken(user._id, user.role),
+      isNewUser,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

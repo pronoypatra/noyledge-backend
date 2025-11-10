@@ -373,7 +373,6 @@ export const getQuizResults = async (req, res) => {
     const quizId = req.params.quizId;
 
     const results = await Result.find({ quizId }).populate('userId', 'name');
-    // console.log("📊 Retrieved results:", results);
 
     const quiz = await Quiz.findById(quizId);
 

@@ -7,12 +7,8 @@ const protect = (req, res, next) => {
 
   try {
     const token = authHeader.split(" ")[1];
-    // Log token to verify it is being sent
-    // console.log("Token received:", token);
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Log decoded user to verify it's being decoded correctly
-    // console.log("Decoded user:", decoded);
 
     req.user = decoded;
     next();

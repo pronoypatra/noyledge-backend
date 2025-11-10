@@ -144,22 +144,23 @@ router.get("/cas/callback", async (req, res) => {
         user.oauthProvider = "cas";
         await user.save();
       }
+      // Existing user - generate token and redirect
+      const token = generateToken(user._id, user.role);
+      const redirectUrl = `${env.FRONTEND_URL}/auth/cas/success?token=${token}`;
+      return res.redirect(redirectUrl);
     } else {
-      user = await User.create({
-        name,
+      // New user - redirect to role selection
+      // Encode user data in URL for role selection
+      const userData = {
         email,
+        name,
         casId,
-        oauthProvider: "cas",
-        role: "user",
-      });
+        provider: 'cas',
+      };
+      const encodedData = encodeURIComponent(JSON.stringify(userData));
+      const redirectUrl = `${env.FRONTEND_URL}/auth/role-selection?data=${encodedData}`;
+      return res.redirect(redirectUrl);
     }
-
-    // Generate token
-    const token = generateToken(user._id, user.role);
-    
-    // Redirect to frontend with token
-    const redirectUrl = `${env.FRONTEND_URL}/auth/cas/success?token=${token}`;
-    res.redirect(redirectUrl);
   } catch (error) {
     // Silent error handling - redirect to login with error parameter
     res.redirect(`${env.FRONTEND_URL}/login?error=cas_error`);
